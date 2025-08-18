@@ -3,6 +3,11 @@ A robot who collects cigarettes using an AI detection program to identify them
 
 
 ## Installation Guide
-TODO
+### Install the ultralytics package from PyPI
+```
+pip install ultralytics
+pip install torch torchvision torchaudio
+
+```
 
 
