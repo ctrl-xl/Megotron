@@ -13,3 +13,4 @@ pip install torch torchvision torchaudio
 ## Autodistill
 
 See  [Auto distill doc](https://docs.autodistill.com/)
+See  [Auto distill target model yolov11](https://github.com/autodistill/autodistill-yolov11)
