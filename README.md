@@ -10,4 +10,6 @@ pip install torch torchvision torchaudio
 
 ```
 
+## Autodistill
 
+See  [Auto distill doc](https://docs.autodistill.com/)
