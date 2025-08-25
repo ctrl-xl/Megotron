@@ -1,7 +1,15 @@
+#remove labeled images
+source_images_labeled/
+test_images_labeled/
+test_images/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
+
+#Mac files
+.DS_Store
 
 # C extensions
 *.so
