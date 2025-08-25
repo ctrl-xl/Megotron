@@ -12,7 +12,7 @@ python3 -m venv venv
 ``` bash
 source venv/bin/activate
 pip install ultralytics
-pip install torch torchvision torchaudio
+pip install torch torchvision torchaudio scipy
 ```
 
 ## Autodistill install
