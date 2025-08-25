@@ -21,7 +21,7 @@ See  [Auto distill doc](https://docs.autodistill.com/)
 and  [Auto distill target model yolov11](https://github.com/autodistill/autodistill-yolov11)
 
 ``` bash
-pip install autodistill autodistill-grounding-dino roboflow scikit-learn 
+pip install autodistill autodistill-grounding-dino roboflow scikit-learn autodistill-yolov11
 ```
 
 ## Files usages
