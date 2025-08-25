@@ -20,14 +20,14 @@ pip install autodistill autodistill-grounding-dino roboflow scikit-learn
 ```
 
 ## Files usages
-### Label the dataset
+### Label the dataset from the source_images/ folder
 - [0_predict_dataset.py](0_predict_dataset.py): Creates the coordinates for the bounding boxes around the cigarettes within 'labels'
 ```bash
-python3 predict_dataset.py
+python3 0_predict_dataset.py
 ```
 
 ### Visualize the labeling
 - [1_visualize.py](1_visualize.py): Draws the bounding box over the picture
 ```bash
-python3 visualize.py image_name.jpg
+python3 1_visualize.py image_name.jpg
 ```
