@@ -16,5 +16,15 @@ See  [Auto distill doc](https://docs.autodistill.com/)
 and  [Auto distill target model yolov11](https://github.com/autodistill/autodistill-yolov11)
 
 ``` bash
-pip install autodistill autodistill-grounded-sam roboflow scikit-learn 
+pip install autodistill autodistill-grounding-dino roboflow scikit-learn 
+```
+
+## Files usages
+- [0_predict_dataset.py](0_predict_dataset.py): Creates the coordinates for the bounding boxes around the cigarettes within 'labels'
+```bash
+python3 predict_dataset.py
+```
+- [1_visualize.py](1_visualize.py): Draws the boudning box over the picture
+```bash
+python3 visualize.py image_name.jpg
 ```
