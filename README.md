@@ -5,7 +5,7 @@ A robot who collects cigarettes using an AI detection program to identify them
 ## Installation Guide
 ### Create a python virtual environment (if none exist)
 ``` bash
-
+python3 -m venv venv
 ```
 
 ### Install the ultralytics package from PyPI
