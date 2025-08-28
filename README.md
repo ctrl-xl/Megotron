@@ -5,14 +5,14 @@ A robot who collects cigarettes using an AI detection program to identify them
 ## Installation Guide
 ### Create a python virtual environment (if none exist)
 ``` bash
+brew install python
 python3 -m venv venv
 ```
 
 ### Install the ultralytics package from PyPI
 ``` bash
 source venv/bin/activate
-pip install ultralytics
-pip install torch torchvision torchaudio scipy
+pip install ultralytics torch torchvision torchaudio scipy tensorflow onnx2tf
 ```
 
 ## Autodistill install
@@ -36,3 +36,13 @@ python3 0_predict_dataset.py
 ```bash
 python3 1_visualize.py image_name.jpg
 ```
+
+###Train the dataset
+- [2_train_Yolo.py](2_train_Yolo.py): Training the AI with the images from [source_images](/Users/lyracoupez/Documents/megotron/Megotron/source_images) during 100 epochs
+```bash
+python3 2_train_Yolo.py
+```
+
+###Validate the dataset
+- [3_validate_yolo.py](3_validate_yolo.py): Validating the learning of the AI with test images forming the dataset
+````bash

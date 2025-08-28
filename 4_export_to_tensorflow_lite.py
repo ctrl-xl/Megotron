@@ -7,4 +7,4 @@ model = YOLO('runs/detect/train/weights/best.pt')
 # Export the model to TFLite format
 # The export will create a file named 'best.tflite'
 # You can also specify the image size with imgsz=640 for example
-model.export(format='tflite')
+model.export(format='onnx')

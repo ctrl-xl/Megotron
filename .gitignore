@@ -3,8 +3,7 @@ source_images_labeled/
 test_images_labeled/
 test_images/
 runs/*
-!runs/detect/train/weights/best.pt
-!runs/detect/train/weights/last.pt
+!runs/detect/train/weights/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
