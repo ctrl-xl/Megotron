@@ -37,12 +37,17 @@ python3 0_predict_dataset.py
 python3 1_visualize.py image_name.jpg
 ```
 
-###Train the dataset
+###Train the model using the dataset
 - [2_train_Yolo.py](2_train_Yolo.py): Training the AI with the images from [source_images](/Users/lyracoupez/Documents/megotron/Megotron/source_images) during 100 epochs
 ```bash
 python3 2_train_Yolo.py
 ```
 
-###Validate the dataset
-- [3_validate_yolo.py](3_validate_yolo.py): Validating the learning of the AI with test images forming the dataset
-````bash
+###Validate the finetuned model
+- [3_validate_yolo.py](3_validate_yolo.py): Validating the finetuning with test images from the dataset 
+```bash
+python3 3_validate_yolo.py
+```
+
+###Exporting the model to have it on a smaller device
+-[4_export](4_export_to_tensorflow_lite.py)
