@@ -12,7 +12,43 @@ python3 -m venv venv
 ### Install the ultralytics package from PyPI
 ``` bash
 source venv/bin/activate
-pip install ultralytics torch torchvision torchaudio scipy tensorflow onnx2tf
+export PATH=/usr/local/cuda/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+export CUDA_HOME=/usr/local/cuda
+source ~/.bashrc
+sudo apt-get update
+sudo apt-get install -y libopenblas-base libopenmpi-dev libomp-dev libjpeg-dev zlib1g-dev libpython3-dev libavcodec-dev libavformat-dev libswscale-dev
+
+pip install numpy
+pip install --no-cache-dir https://developer.download.nvidia.com/compute/redist/jp/v512/pytorch/torch-2.1.0a0+41361538.nv23.06-cp38-cp38-linux_aarch64.whl
+
+git clone --branch v0.16.1 https://github.com/pytorch/vision torchvision
+cd torchvision
+export BUILD_VERSION=0.16.1
+python3 setup.py install --user
+pip install pybind11 setuptools wheel "pillow<11" urllib3 idna certifi
+cd ..
+
+
+# Install dependencies
+pip install -U pip six numpy wheel setuptools mock 'future>=0.17.1' 'gast==0.4.0' 'protobuf<3.20' pybind11 cython pkgconfig packaging h5py
+
+sudo apt-get install -y liblapack-dev libblas-dev gfortran
+
+# Install TensorFlow (compatible with JetPack 5)
+pip install --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v51 tensorflow==2.11.0+nv23.01
+
+
+pip install ultralytics scipy onnx2tf
+
+# Install the base wrapper
+pip install autodistill
+
+# Install Grounding DINO - this will trigger a compilation of 'groundingdino'
+# We set MAX_JOBS=4 to prevent the Xavier from running out of RAM during compilation
+export MAX_JOBS=4
+pip install autodistill-grounding-dino
+
 ```
 
 ## Autodistill install
