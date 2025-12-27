@@ -3,6 +3,7 @@ import os
 from ultralytics import YOLO
 import cv2
 import numpy as np
+import torch
 
 def main():
     # Set up argument parser
@@ -11,7 +12,19 @@ def main():
     parser.add_argument('--model', type=str, default='runs/detect/train/weights/best.pt', help='Path to YOLO model file')
     
     args = parser.parse_args()
-    
+
+    # --- DEBUT AJOUT ---
+    print("-" * 30)
+    if torch.cuda.is_available():
+        print(f"✅ GPU DÉTECTÉ : {torch.cuda.get_device_name(0)}")
+        processeur = 'cuda' 
+    else:
+        print("⚠️ ATTENTION : GPU non détecté, utilisation du CPU (Lent !)")
+        processeur = 'cpu'
+    print("-" * 30)
+    # --- FIN AJOUT ---
+
+    #processeur = 'cpu'
     # Use the image_name directly as the full path
     image_path = args.image_name
     
@@ -23,6 +36,7 @@ def main():
     # Load the model
     try:
         model = YOLO(args.model)
+        model.to(processeur)
         print(f"Loaded model: {args.model}")
     except Exception as e:
         print(f"Error loading model: {e}")
@@ -30,7 +44,7 @@ def main():
     
     # Predict with the model
     print(f"Running prediction on: {image_path}")
-    results = model(image_path)
+    results = model.predict(image_path)
     
     # Get the first result (since we're processing one image)
     if len(results) > 0:

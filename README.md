@@ -28,7 +28,8 @@ export BUILD_VERSION=0.16.1
 python3 setup.py install --user
 pip install pybind11 setuptools wheel "pillow<11" urllib3 idna certifi
 cd ..
-
+pip uninstall -y requests
+pip install "requests==2.31.0"
 
 # Install dependencies
 pip install -U pip six numpy wheel setuptools mock 'future>=0.17.1' 'gast==0.4.0' 'protobuf<3.20' pybind11 cython pkgconfig packaging h5py
@@ -38,8 +39,11 @@ sudo apt-get install -y liblapack-dev libblas-dev gfortran
 # Install TensorFlow (compatible with JetPack 5)
 pip install --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v51 tensorflow==2.11.0+nv23.01
 
+pip install ultralytics --no-deps
+pip install onnx2tf --no-deps
+pip install "matplotlib>=3.3.0" "numpy>=1.23.0" "opencv-python>=4.6.0" "pillow>=7.1.2" "pyyaml>=5.3.1" "scipy>=1.4.1" "tqdm>=4.64.0" pandas seaborn psutil py-cpuinfo sng4onnx onnx_graphsurgeon simple_onnx_processing_tools
 
-pip install ultralytics scipy onnx2tf
+pip install scipy
 
 # Install the base wrapper
 pip install autodistill
