@@ -64,6 +64,13 @@ and  [Auto distill target model yolov11](https://github.com/autodistill/autodist
 pip install autodistill autodistill-grounding-dino roboflow scikit-learn autodistill-yolov11
 ```
 
+# Libraries for the robot arm (PCA9685, ADS1115)
+``` bash
+sudo pip3 install adafruit-blinka adafruit-circuitpython-pca9685 adafruit-circuitpython-ads1x15 adafruit-circuitpython-motor 
+pip install Jetson.GPIO
+```
+
+
 ## Files usages
 ### Label the dataset from the source_images/ folder
 - [0_predict_dataset.py](0_predict_dataset.py): Creates the coordinates for the bounding boxes around the cigarettes within 'labels'
@@ -91,3 +98,23 @@ python3 3_validate_yolo.py
 
 ###Exporting the model to have it on a smaller device
 -[4_export](4_export_to_tensorflow_lite.py)
+
+
+
+
+# TODO List 
+- Faire la recherche sur l'entraînement d'une IA
+- Récolter des photos de mégots
+- Annoter les images/ Mettre des labels autour des megots
+- Creer le dataset
+- Findtuner le modele YOLOv11 (specialiser l'IA = best.pt) 
+- Faire les predictions live avec la camera
+- Transformer des coordonees y et x en trois rotations, une pour chaque moteur (Base, Vertical, Horizontal)
+	Methode 1, programme traditionnel
+	- Avec les coordonees (x,y) du centre de la boite d'un megot, 
+	- On bouge en premier la base jusqu'a ce que le megot soit aligne au centre de l'image live
+	- Les deux autres (Vertical et Horizontal) doivent bouger de concert pour que la pointe atteigne le megot
+	Methode 2, apprentissage
+	- essai-erreur jusqu'a atteindre les bonnes coordonnees
+	Methode 3, automatise fonction de recompense
+	- enregistre si bien fait, sinon pas enregistre
