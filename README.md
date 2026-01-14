@@ -67,7 +67,7 @@ pip install autodistill autodistill-grounding-dino roboflow scikit-learn autodis
 # Libraries for the robot arm (PCA9685, ADS1115)
 ``` bash
 sudo pip3 install adafruit-blinka adafruit-circuitpython-pca9685 adafruit-circuitpython-ads1x15 adafruit-circuitpython-motor 
-pip install Jetson.GPIO
+pip install Jetson.GPIO 
 ```
 
 
@@ -100,6 +100,11 @@ python3 3_validate_yolo.py
 -[4_export](4_export_to_tensorflow_lite.py)
 
 
+
+# Recupérer le numero GPIO du bus I2C
+```bash
+sudo i2cdetect -y -r 8
+```
 
 
 # TODO List 

@@ -1,7 +1,7 @@
-# Broche 1 (noir ->#	 rose) (3.3V) : Alimentation logique des modules.
-# Broche 3 (gris) (SDA) : Ligne de données (Serial Data).
-# Broche 5 (bleu) (SCL) : Ligne d'horloge (Serial Clock).
-# Broche 6 (vert) (GND) : Terre commune (Ground).
+# Broche 1 (jaune) (3.3V) : Alimentation logique des modules.
+# Broche 3 (orange) (SDA) : Ligne de données (Serial Data).
+# Broche 5 (rouge) (SCL) : Ligne d'horloge (Serial Clock).
+# Broche 6 (brun) (GND) : Terre commune (Ground).
 
 
 import time
@@ -22,25 +22,27 @@ pca.frequency = 50  # Les servos attendent généralement 50Hz
 # Création de l'objet servo sur le canal 0
 # Assure-toi que ton servo est branché sur la prise 0 du driver
 servo0 = servo.Servo(pca.channels[0])
+servo1 = servo.Servo(pca.channels[1])
 
 print("Début du test servo...")
 
 try:
+    servo1.angle = 110
     while True:
-        print("Angle: 0 degrés")
-        servo0.angle = 0
+        print("Angle: 15 degrés")
+        servo0.angle = 15
         time.sleep(1)
         
-        print("Angle: 90 degrés")
-        servo0.angle = 90
+        print("Angle: 30 degrés")
+        servo0.angle = 30
         time.sleep(1)
 
-        print("Angle: 180 degrés")
-        servo0.angle = 180
+        print("Angle: 45 degrés")
+        servo0.angle = 45
         time.sleep(1)
 
-        print("Angle: 90 degrés")
-        servo0.angle = 90
+        print("Angle: 30 degrés")
+        servo0.angle = 30
         time.sleep(1)
 
 except KeyboardInterrupt:
