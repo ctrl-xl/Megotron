@@ -1,7 +1,7 @@
-# Broche 1 (jaune) (3.3V) : Alimentation logique des modules.
-# Broche 3 (orange) (SDA) : Ligne de données (Serial Data).
-# Broche 5 (rouge) (SCL) : Ligne d'horloge (Serial Clock).
-# Broche 6 (brun) (GND) : Terre commune (Ground).
+# Broche 1 (blanc) (3.3V) : Alimentation logique des modules.
+# Broche 3 (mauve) (SDA) : Ligne de données (Serial Data).
+# Broche 5 (bleu) (SCL) : Ligne d'horloge (Serial Clock).
+# Broche 6 (gris) (GND) : Terre commune (Ground).
 
 
 import time
