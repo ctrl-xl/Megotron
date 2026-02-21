@@ -34,7 +34,9 @@ LIMITS_PROFONDEUR = (22, 170)
 
 # Paramètres de Tracking
 CENTER_TOLERANCE = 7        
-SLOW_THRESHOLD   = 30       # Seuil (pixels pour cam, degrés pour servos) pour ralentir
+SLOW_THRESHOLD   = 30  
+CONFIDENCE = 0.7
+
 
 STEP_SIZE_FAST   = 1.0      # Vitesse "Approche" (Loin)
 STEP_SIZE_SLOW   = 0.25     # Vitesse "Précision" (Proche)
@@ -45,7 +47,7 @@ ETAT_SEARCH  = 0  # Recherche / Alignement Rotation
 ETAT_VERIFY  = 1  # Verrouillé -> Attente confirmation ESPACE
 ETAT_DESCEND = 2  # Descente progressive vers la cible
 ETAT_WAIT    = 3  # Attente en bas (Piquage)
-ETAT_RESET   = 4  # Retour position Home
+ETAT_RESET   = 4  # Retour progressif position Home
 # ==========================================
 
 def calculer_angles_depuis_pixels(pixel_y):
@@ -63,7 +65,7 @@ def calculer_angles_depuis_pixels(pixel_y):
 
 def deplacer_servo_progressif(current_angle, target_angle, servo_obj, limits):
     """
-    Fonction utilitaire pour calculer le prochain pas d'un servo
+    Fonction utilitaire pour calculer le prochain pas d'un servo.
     Renvoie: (nouvel_angle, est_arrive)
     """
     diff = target_angle - current_angle
@@ -71,6 +73,7 @@ def deplacer_servo_progressif(current_angle, target_angle, servo_obj, limits):
     if abs(diff) < 0.5:
         return target_angle, True
     
+    # Utilisation des vitesses définies pour la fluidité
     step = STEP_SIZE_FAST if abs(diff) > SLOW_THRESHOLD else STEP_SIZE_SLOW
     
     if diff > 0:
@@ -151,11 +154,6 @@ def main():
     # =========================================================================
     print("-" * 30)
     print("🖐️  MODE CALIBRATION ACTIVÉ")
-    print("   SELECTION : [r] Rotation | [h] Hauteur | [p] Profondeur")
-    print("   AJUSTEMENT: [<] GAUCHE   | [>] DROITE")
-    print("   VALIDER   : [ESPACE]")
-    print("-" * 30)
-
     calibration_done = False
     
     while not calibration_done:
@@ -166,11 +164,9 @@ def main():
         height, width = frame.shape[:2]
         center_x = width // 2
         
-        # --- UI CALIBRATION ---
         cv2.line(annotated_frame, (center_x, 0), (center_x, height), (0, 255, 255), 1)
         cv2.putText(annotated_frame, "MODE CALIBRATION", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
         
-        # Affichage des axes
         y_pos = 70
         for key, axis in axes.items():
             color = (0, 255, 0) if key == active_axis_key else (100, 100, 100)
@@ -180,8 +176,6 @@ def main():
             cv2.putText(annotated_frame, text, (10, y_pos), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
             y_pos += 30
 
-        # Instructions en bas de l'écran
-        cv2.putText(annotated_frame, "TOUCHES: [r]ot [h]aut [p]rof", (10, height - 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
         cv2.putText(annotated_frame, "FLECHES: Ajuster | ESPACE: Valider", (10, height - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
         cv2.imshow('Megotron', annotated_frame)
@@ -215,9 +209,8 @@ def main():
     target_hauteur = 0
     target_profondeur = 0
     
-    # Variables pour mémoriser la cible verrouillée (affichage)
-    locked_box = None   # (x1, y1, x2, y2)
-    locked_center = None # (cx, cy)
+    locked_box = None   
+    locked_center = None 
 
     try:
         while True:
@@ -228,27 +221,30 @@ def main():
             height, width = frame.shape[:2]
             img_center_x = width // 2
             
-            state_text = ["SEARCH", "VERIFY", "DESCEND", "WAIT", "RESET"][robot_state]
-            if robot_state == ETAT_VERIFY: state_color = (0, 255, 255) # Jaune
-            elif robot_state == ETAT_DESCEND: state_color = (255, 100, 0) # Bleu
-            else: state_color = (0, 255, 0)
-                
+            state_text = ["RECHERCHE", "VERIFICATION", "DESCENTE", "PIQUAGE", "RETOUR"][robot_state]
+            state_color = (0, 255, 255) if robot_state == ETAT_VERIFY else (255, 100, 0) if robot_state == ETAT_DESCEND else (0, 255, 0)
             cv2.putText(annotated_frame, f"ETAT: {state_text}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, state_color, 2)
 
+            # --- ETAT 0 : RECHERCHE (YOLO + Rotation) ---
             if robot_state == ETAT_SEARCH:
                 cv2.line(annotated_frame, (img_center_x - CENTER_TOLERANCE, 0), (img_center_x - CENTER_TOLERANCE, height), (0, 255, 0), 1)
                 cv2.line(annotated_frame, (img_center_x + CENTER_TOLERANCE, 0), (img_center_x + CENTER_TOLERANCE, height), (0, 255, 0), 1)
 
-                results = model(frame, conf=0.3, verbose=False, device=device)
+                results = model(frame, conf=CONFIDENCE, verbose=False, device=device)
                 detected_objects = []
 
                 for box in results[0].boxes:
                     coords = box.xyxy[0].cpu().numpy()
-                    cx = int((coords[0] + coords[2]) / 2)
-                    cy = int((coords[1] + coords[3]) / 2)
+                    conf = float(box.conf[0])
+                    x1, y1, x2, y2 = int(coords[0]), int(coords[1]), int(coords[2]), int(coords[3])
+                    cx, cy = int((x1 + x2) / 2), int((y1 + y2) / 2)
                     dist_msg = abs(cx - img_center_x) 
-                    # On stocke aussi les coords brutes (x1, y1, x2, y2) pour l'affichage plus tard
-                    detected_objects.append({'cx': cx, 'cy': cy, 'dist': dist_msg, 'box': coords})
+                    detected_objects.append({'cx': cx, 'cy': cy, 'dist': dist_msg, 'box': coords, 'conf': conf})
+
+                    # Affichage Bounding Boxes + Confiance
+                    cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
+                    label = f"Megot {conf:.2f}"
+                    cv2.putText(annotated_frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
                 detected_objects.sort(key=lambda obj: obj['dist'])
 
@@ -257,118 +253,75 @@ def main():
                     tx, ty = target['cx'], target['cy']
                     error_x = tx - img_center_x
                     
+                    # Mise en évidence cible #1
+                    x1_t, y1_t, x2_t, y2_t = int(target['box'][0]), int(target['box'][1]), int(target['box'][2]), int(target['box'][3])
+                    cv2.rectangle(annotated_frame, (x1_t, y1_t), (x2_t, y2_t), (0, 255, 255), 2)
+                    
                     if abs(error_x) > CENTER_TOLERANCE:
                         direction = -1 if args.invert else 1
                         step = STEP_SIZE_FAST if abs(error_x) > SLOW_THRESHOLD else STEP_SIZE_SLOW
-                        
                         axes['rotation']['angle'] += (step * direction * (1 if error_x < 0 else -1))
                         
                         min_r, max_r = axes['rotation']['limits']
                         axes['rotation']['angle'] = max(min_r, min(max_r, axes['rotation']['angle']))
-                        
-                        if axes['rotation']['servo']:
-                            axes['rotation']['servo'].angle = axes['rotation']['angle']
-                        
-                        cv2.line(annotated_frame, (img_center_x, int(height/2)), (tx, ty), (0, 255, 255), 2)
+                        if axes['rotation']['servo']: axes['rotation']['servo'].angle = axes['rotation']['angle']
                     else:
-                        # --- CIBLE TROUVÉE -> PASSAGE EN VÉRIFICATION ---
-                        cv2.circle(annotated_frame, (tx, ty), 15, (0, 255, 0), 3)
-                        
-                        # Calcul immédiat des cibles finales
+                        # Verrouillage
                         h_calc, p_calc = calculer_angles_depuis_pixels(ty)
                         target_hauteur = max(axes['hauteur']['limits'][0], min(axes['hauteur']['limits'][1], h_calc))
                         target_profondeur = max(axes['profondeur']['limits'][0], min(axes['profondeur']['limits'][1], p_calc))
                         
-                        # --- SAUVEGARDE POUR AFFICHAGE ---
-                        b = target['box']
-                        locked_box = (int(b[0]), int(b[1]), int(b[2]), int(b[3]))
+                        locked_box = (x1_t, y1_t, x2_t, y2_t)
                         locked_center = (tx, ty)
-
-                        print(f"🔒 Cible verrouillée. H:{target_hauteur:.1f} P:{target_profondeur:.1f}")
                         robot_state = ETAT_VERIFY
 
+            # --- ETAT 1 : VERIFICATION ---
             elif robot_state == ETAT_VERIFY:
-                # --- AFFICHAGE DE LA CIBLE MÉMORISÉE ---
                 if locked_box:
                     x1, y1, x2, y2 = locked_box
-                    # Rectangle Vert autour du mégot
                     cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                
                 if locked_center:
-                    cx, cy = locked_center
-                    # Point Rouge au centre
-                    cv2.circle(annotated_frame, (cx, cy), 10, (0, 0, 255), -1)
-                    # Texte coordonnées
-                    cv2.putText(annotated_frame, f"CIBLE ({cx},{cy})", (cx + 15, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-
+                    cv2.circle(annotated_frame, locked_center, 10, (0, 0, 255), -1)
                 cv2.putText(annotated_frame, "ESPACE: VALIDER | ESC: ANNULER", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-                cv2.putText(annotated_frame, f"Cibles -> H:{target_hauteur:.0f} P:{target_profondeur:.0f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 2)
 
+            # --- ETAT 2 : DESCENTE PROGRESSIVE ---
             elif robot_state == ETAT_DESCEND:
-                curr_h = axes['hauteur']['angle']
-                curr_p = axes['profondeur']['angle']
-                new_h, done_h = deplacer_servo_progressif(curr_h, target_hauteur, axes['hauteur']['servo'], axes['hauteur']['limits'])
-                new_p, done_p = deplacer_servo_progressif(curr_p, target_profondeur, axes['profondeur']['servo'], axes['profondeur']['limits'])
-                axes['hauteur']['angle'] = new_h
-                axes['profondeur']['angle'] = new_p
-                
-                diff_h = abs(target_hauteur - new_h)
-                diff_p = abs(target_profondeur - new_p)
-                cv2.putText(annotated_frame, f"Delta H:{diff_h:.1f} P:{diff_p:.1f}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-
+                new_h, done_h = deplacer_servo_progressif(axes['hauteur']['angle'], target_hauteur, axes['hauteur']['servo'], axes['hauteur']['limits'])
+                new_p, done_p = deplacer_servo_progressif(axes['profondeur']['angle'], target_profondeur, axes['profondeur']['servo'], axes['profondeur']['limits'])
+                axes['hauteur']['angle'], axes['profondeur']['angle'] = new_h, new_p
                 if done_h and done_p:
-                    print("⬇️ Descente terminée. Piquage.")
                     state_start_time = time.time()
                     robot_state = ETAT_WAIT
 
+            # --- ETAT 3 : PIQUAGE ---
             elif robot_state == ETAT_WAIT:
                 elapsed = time.time() - state_start_time
-                remaining = 2.0 - elapsed
-                cv2.putText(annotated_frame, f"PIQUAGE: {remaining:.1f}s", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                if elapsed >= 2.0:
-                    robot_state = ETAT_RESET
+                cv2.putText(annotated_frame, f"PIQUAGE: {2.0 - elapsed:.1f}s", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                if elapsed >= 2.0: robot_state = ETAT_RESET
 
+            # --- ETAT 4 : RETOUR PROGRESSIF AU HOME ---
             elif robot_state == ETAT_RESET:
-                cv2.putText(annotated_frame, "RETOUR HOME...", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (100, 100, 255), 2)
-                if axes['hauteur']['servo']: 
-                    axes['hauteur']['servo'].angle = BASE_ANGLE_HAUTEUR
-                    axes['hauteur']['angle'] = BASE_ANGLE_HAUTEUR
-                    time.sleep(0.1)
-                if axes['profondeur']['servo']: 
-                    axes['profondeur']['servo'].angle = BASE_ANGLE_PROFONDEUR
-                    axes['profondeur']['angle'] = BASE_ANGLE_PROFONDEUR
-                    time.sleep(0.1)
-                time.sleep(1.0)
-                print("🔄 Prêt pour le prochain.")
+                # On remonte les servos vers les positions de départ (BASE_ANGLE)
+                new_h, done_h = deplacer_servo_progressif(axes['hauteur']['angle'], BASE_ANGLE_HAUTEUR, axes['hauteur']['servo'], axes['hauteur']['limits'])
+                new_p, done_p = deplacer_servo_progressif(axes['profondeur']['angle'], BASE_ANGLE_PROFONDEUR, axes['profondeur']['servo'], axes['profondeur']['limits'])
+                axes['hauteur']['angle'], axes['profondeur']['angle'] = new_h, new_p
                 
-                # Réinitialisation des variables de cible pour le prochain cycle
-                locked_box = None
-                locked_center = None
-                robot_state = ETAT_SEARCH
+                cv2.putText(annotated_frame, "RETOUR POSITION DEPART...", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (100, 100, 255), 2)
+
+                if done_h and done_p:
+                    print("🔄 Retour Home terminé. Reprise de la recherche.")
+                    locked_box, locked_center = None, None
+                    robot_state = ETAT_SEARCH
 
             cv2.imshow('Megotron', annotated_frame)
             key = cv2.waitKey(1) & 0xFF
-            
-            if key == ord('q'):
-                break
-            
-            elif key == 27: # ESC (Code 27)
-                if robot_state == ETAT_VERIFY:
-                    print("↩️ Verrouillage annulé. Retour Recherche.")
-                    locked_box = None
-                    locked_center = None
-                    robot_state = ETAT_SEARCH
-
-            elif key == 32: # ESPACE
-                if robot_state == ETAT_VERIFY:
-                    print("🚀 Validation reçue.")
-                    robot_state = ETAT_DESCEND
+            if key == ord('q'): break
+            elif key == 27 and robot_state == ETAT_VERIFY: robot_state = ETAT_SEARCH
+            elif key == 32 and robot_state == ETAT_VERIFY: robot_state = ETAT_DESCEND
 
     except KeyboardInterrupt:
         print("\nArrêt demandé...")
-    
     finally:
-        print("\n🛑 NETTOYAGE...")
         if pca:
             try:
                 pca.channels[PIN_ROTATION].duty_cycle = 0
