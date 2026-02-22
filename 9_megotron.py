@@ -24,12 +24,12 @@ PIN_PROFONDEUR = 0
 
 # Angles de départ (HOME)
 BASE_ANGLE_ROTATION   = 122.0  
-BASE_ANGLE_HAUTEUR    = 10.0  
+BASE_ANGLE_HAUTEUR    = 140.0  
 BASE_ANGLE_PROFONDEUR = 135.0  
 
 # Limites de Sécurité
 LIMITS_ROTATION   = (66, 180)   
-LIMITS_HAUTEUR    = (10, 160)   
+LIMITS_HAUTEUR    = (0, 140)   
 LIMITS_PROFONDEUR = (22, 170)   
 
 # Paramètres de Tracking
@@ -50,16 +50,16 @@ ETAT_WAIT    = 3  # Attente en bas (Piquage)
 ETAT_RESET   = 4  # Retour progressif position Home
 # ==========================================
 
-def calculer_angles_depuis_pixels(pixel_y):
+def calculer_angles_depuis_pixels(x_pixels):
     """
-    Calcule Hauteur et Profondeur basées sur la position Y du mégot dans l'image.
+    Calcule la hauteur et la profondeur en degrés à partir d'une distance en pixels.
+    Basé sur la 3ème itération des données de calibration (1 cm = 26.6667 px).
     """
-    x = pixel_y
-    # Formule Hauteur
-    hauteur = (-0.00004636 * (x**2)) - (0.11793941 * x) + 173.86373626
+    # Formule pour la Hauteur
+    hauteur = (-0.00020089 * (x_pixels**2)) + (0.26249967 * x_pixels) - 31.42857143
     
-    # Formule Profondeur
-    profondeur = (-0.00015284 * (x**2)) + (0.04321251 * x) + 78.39481456
+    # Formule pour la Profondeur
+    profondeur = (-0.00025112 * (x_pixels**2)) + (0.04241066 * x_pixels) + 77.97619048
     
     return hauteur, profondeur
 
